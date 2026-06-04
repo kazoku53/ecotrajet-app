@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoTrajet - Calculateur de coût réel de trajet</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: #f3f2e9;
+            color: #2f3e2f;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #3b6e4d;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        #toggleDarkMode {
+            max-width: 200px;
+            margin: 0 auto 20px auto;
+            display: block;
+        }
+        .section {
+            background: #ffffff;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 14px;
+            border: 1px solid #dcd7c9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: #8fbf8f;
+            border-radius: 14px 0 0 14px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #3b6e4d;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        label {
+            font-weight: 600;
+            margin-top: 10px;
+            display: block;
+            color: #4a5f4a;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #c9c5b8;
+            background: #faf9f4;
+            color: #2f3e2f;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #8fbf8f;
+            box-shadow: 0 0 8px rgba(143,191,143,0.4);
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #8fbf8f;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        button:hover {
+            background: #6ea86e;
+            box-shadow: 0 0 10px rgba(143,191,143,0.4);
+        }
+        .reset {
+            background: #c9c5b8;
+            color: #2f3e2f;
+        }
+        .reset:hover {
+            background: #b8b3a3;
+        }
+        .result, .advice {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 14px;
+            margin-top: 25px;
+            border: 1px solid #dcd7c9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .result h3, .advice h3 {
+            margin-top: 0;
+            color: #3b6e4d;
+            font-weight: 600;
+        }
+        .result strong {
+            font-size: 20px;
+            color: #3b6e4d;
+        }
+        .dark-mode {
+            background: #1b2b1b !important;
+            color: #e8f5e8 !important;
+        }
+        .dark-mode .section,
+        .dark-mode .result,
+        .dark-mode .advice {
+            background: #243624 !important;
+            border-color: #3a5a3a !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+        .dark-mode h1,
+        .dark-mode h2,
+        .dark-mode label,
+        .dark-mode strong {
+            color: #9fd8a5 !important;
+        }
+        .dark-mode input,
+        .dark-mode select {
+            background: #1f2f1f !important;
+            border-color: #3a5a3a !important;
+            color: #e8f5e8 !important;
+        }
+        .dark-mode button {
+            background: #3a5a3a !important;
+        }
+        .dark-mode button:hover {
+            background: #4f7a4f !important;
+        }
+        .dark-mode .reset {
+            background: #556b55 !important;
+        }
+        .dark-mode .reset:hover {
+            background: #6d8a6d !important;
+        }
+    </style>
+</head>
+<body>
+
+<h1>EcoTrajet - Coût réel d’un trajet</h1>
+
+<button id="toggleDarkMode" onclick="toggleDarkMode()">🌙 Mode sombre</button>
+
+<div class="section">
+    <h2>Informations du véhicule</h2>
+
+    <label>Type de véhicule</label>
+    <select id="typeVehicule" onchange="autoFill()">
+        <option value="">-- Choisir --</option>
+        <option value="petite">Petite voiture</option>
+        <option value="suv">SUV</option>
+        <option value="utilitaire">Utilitaire</option>
+        <option value="moto">Moto</option>
+        <option value="pl19">PL 19T</option>
+        <option value="spl44">SPL 44T</option>
+    </select>
+
+    <button type="button" onclick="autoFill()">Remplir automatiquement</button>
+
+    <label>Consommation moyenne (L/100km)</label>
+    <input id="conso" type="number" step="0.1">
+
+    <label>Prix du carburant (€/L)</label>
+    <input id="prixCarburant" type="number" step="0.01">
+
+    <label>Usure pneus (€/km)</label>
+    <input id="pneus" type="number" step="0.01">
+
+    <label>Usure freins (€/km)</label>
+    <input id="freins" type="number" step="0.01">
+
+    <label>Entretien (€/km)</label>
+    <input id="entretien" type="number" step="0.01">
+
+    <label>Amortissement (€/km)</label>
+    <input id="amortissement" type="number" step="0.01">
+</div>
+
+<div class="section">
+    <h2>Trajet</h2>
+
+    <label>Mode de déplacement</label>
+    <select id="modeDeplacement">
+        <option value="driving-car">Voiture</option>
+        <option value="driving-hgv">Poids lourd</option>
+        <option value="cycling-regular">Vélo</option>
+        <option value="foot-walking">Marche</option>
+    </select>
+
+    <label>Départ</label>
+    <input id="depart" type="text" placeholder="Ex : Laval">
+
+    <label>Code postal (départ)</label>
+    <input id="cpDepart" type="text" placeholder="Ex : 53000">
+
+    <label>Arrivée</label>
+    <input id="arrivee" type="text" placeholder="Ex : Rennes">
+
+    <label>Code postal (arrivée)</label>
+    <input id="cpArrivee" type="text" placeholder="Ex : 35000">
+
+    <button type="button" onclick="calculerDistance()">Calculer la distance automatiquement</button>
+
+    <label>Distance (km)</label>
+    <input id="distance" type="number" step="0.1">
+
+    <label>Nombre de passagers</label>
+    <input id="passagers" type="number" value="1" min="1">
+</div>
+
+<button onclick="calculer()">Calculer le coût du trajet</button>
+<button class="reset" onclick="resetForm()">Réinitialiser</button>
+<button onclick="exportPDF()">📄 Exporter en PDF</button>
+
+<div id="resultats" class="result" style="display:none;"></div>
+<div id="conseils" class="advice" style="display:none;"></div>
+
+<script>
+function autoFill() {
+    let type = document.getElementById("typeVehicule").value;
+
+    let valeurs = {
+        petite: { conso: 5.5, carburant: 1.80, pneus: 0.015, freins: 0.010, entretien: 0.05, amortissement: 0.10 },
+        suv: { conso: 7.5, carburant: 1.90, pneus: 0.025, freins: 0.015, entretien: 0.07, amortissement: 0.15 },
+        utilitaire: { conso: 9.0, carburant: 1.95, pneus: 0.030, freins: 0.020, entretien: 0.10, amortissement: 0.20 },
+        moto: { conso: 4.0, carburant: 1.80, pneus: 0.010, freins: 0.005, entretien: 0.03, amortissement: 0.08 },
+        pl19: { conso: 28, carburant: 1.80, pneus: 0.045, freins: 0.020, entretien: 0.12, amortissement: 0.25 },
+        spl44: { conso: 32, carburant: 1.80, pneus: 0.060, freins: 0.025, entretien: 0.15, amortissement: 0.35 }
+    };
+
+    if (valeurs[type]) {
+        document.getElementById("conso").value = valeurs[type].conso;
+        document.getElementById("prixCarburant").value = valeurs[type].carburant;
+        document.getElementById("pneus").value = valeurs[type].pneus;
+        document.getElementById("freins").value = valeurs[type].freins;
+        document.getElementById("entretien").value = valeurs[type].entretien;
+        document.getElementById("amortissement").value = valeurs[type].amortissement;
+    }
+}
+
+function animateValue(element, start, end, duration) {
+    let startTime = null;
+    function animationStep(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const value = start + (end - start) * progress;
+        element.textContent = value.toFixed(2);
+        if (progress < 1) requestAnimationFrame(animationStep);
+    }
+    requestAnimationFrame(animationStep);
+}
+
+function calculer() {
+    let conso = parseFloat(document.getElementById("conso").value);
+    let prixCarburant = parseFloat(document.getElementById("prixCarburant").value);
+    let pneus = parseFloat(document.getElementById("pneus").value);
+    let freins = parseFloat(document.getElementById("freins").value);
+    let entretien = parseFloat(document.getElementById("entretien").value);
+    let amortissement = parseFloat(document.getElementById("amortissement").value);
+    let distance = parseFloat(document.getElementById("distance").value);
+    let passagers = parseInt(document.getElementById("passagers").value);
+
+    if (isNaN(conso) || isNaN(prixCarburant) || isNaN(pneus) || isNaN(freins) ||
+        isNaN(entretien) || isNaN(amortissement) || isNaN(distance) || isNaN(passagers) || passagers <= 0) {
+        alert("Merci de remplir tous les champs correctement.");
+        return;
+    }
+
+    let coutCarburant = (conso / 100) * distance * prixCarburant;
+    let coutPneus = pneus * distance;
+    let coutFreins = freins * distance;
+    let coutEntretien = entretien * distance;
+    let coutAmortissement = amortissement * distance;
+
+    let total = coutCarburant + coutPneus + coutFreins + coutEntretien + coutAmortissement;
+    let parKm = total / distance;
+    let parPersonne = total / passagers;
+
+    document.getElementById("resultats").style.display = "block";
+    document.getElementById("resultats").innerHTML = `
+        <h3>Résultats</h3>
+        <strong>Coût total : <span id="animTotal">0</span> €</strong><br><br>
+        Carburant : <span id="animCarb">0</span> €<br>
+        Pneus : <span id="animPneus">0</span> €<br>
+        Freins : <span id="animFreins">0</span> €<br>
+        Entretien : <span id="animEntretien">0</span> €<br>
+        Amortissement : <span id="animAmort">0</span> €<br><br>
+        Coût par km : <span id="animKm">0</span> €<br>
+        Coût par personne : <span id="animPers">0</span> €
+    `;
+
+    animateValue(document.getElementById("animTotal"), 0, total, 800);
+    animateValue(document.getElementById("animCarb"), 0, coutCarburant, 800);
+    animateValue(document.getElementById("animPneus"), 0, coutPneus, 800);
+    animateValue(document.getElementById("animFreins"), 0, coutFreins, 800);
+    animateValue(document.getElementById("animEntretien"), 0, coutEntretien, 800);
+    animateValue(document.getElementById("animAmort"), 0, coutAmortissement, 800);
+    animateValue(document.getElementById("animKm"), 0, parKm, 800);
+    animateValue(document.getElementById("animPers"), 0, parPersonne, 800);
+
+    document.getElementById("conseils").style.display = "block";
+    document.getElementById("conseils").innerHTML = `
+        <h3>Conseils pour réduire vos coûts</h3>
+        - En roulant un peu moins vite, vous pouvez réduire le coût carburant d'environ ${(coutCarburant * 0.08).toFixed(2)} €.<br>
+        - Une bonne pression des pneus peut économiser jusqu'à ${(coutCarburant * 0.05).toFixed(2)} € sur ce trajet.<br>
+        - Avec un passager de plus, le coût par personne descendrait à ${(total / (passagers + 1)).toFixed(2)} €.
+    `;
+}
+
+function resetForm() {
+    document.querySelectorAll("input").forEach(i => i.value = "");
+    document.getElementById("typeVehicule").value = "";
+    document.getElementById("modeDeplacement").value = "driving-car";
+    document.getElementById("resultats").style.display = "none";
+    document.getElementById("conseils").style.display = "none";
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    let btn = document.getElementById("toggleDarkMode");
+    btn.textContent = document.body.classList.contains("dark-mode")
+        ? "☀️ Mode clair"
+        : "🌙 Mode sombre";
+}
+
+async function calculerDistance() {
+    const depart = document.getElementById("depart").value;
+    const cpDepart = document.getElementById("cpDepart").value;
+    const arrivee = document.getElementById("arrivee").value;
+    const cpArrivee = document.getElementById("cpArrivee").value;
+    const mode = document.getElementById("modeDeplacement").value;
+
+    if (!depart || !arrivee || !cpDepart || !cpArrivee) {
+        alert("Veuillez entrer la ville ET le code postal pour le départ et l'arrivée.");
+        return;
+    }
+
+    const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjIzNmVkYjgyNjhlNzRlYmNhY2IzZjgzYjQxMmI3MjgzIiwiaCI6Im11cm11cjY0In0=";
+
+    async function geocode(ville, cp) {
+        const query = `${ville} ${cp}, France`;
+        const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(query)}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Erreur API géocodage (" + response.status + ").");
+        const data = await response.json();
+        if (!data.features || data.features.length === 0)
+            throw new Error("Adresse introuvable : " + query);
+        return data.features[0].geometry.coordinates;
+    }
+
+    try {
+        const coordDepart = await geocode(depart, cpDepart);
+        const coordArrivee = await geocode(arrivee, cpArrivee);
+
+        const url = `https://api.openrouteservice.org/v2/directions/${mode}?api_key=${apiKey}`;
+        const body = { coordinates: [coordDepart, coordArrivee] };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error("ORS directions error:", data);
+            throw new Error(
+                data.error && data.error.message
+                    ? data.error.message
+                    : "Erreur API directions (" + response.status + ")."
+            );
+        }
+
+        const distanceMetres = data.routes[0].summary.distance;
+        const distanceKm = distanceMetres / 1000;
+        document.getElementById("distance").value = distanceKm.toFixed(1);
+        alert("Distance calculée : " + distanceKm.toFixed(1) + " km");
+    } catch (error) {
+        alert("Erreur : " + error.message);
+    }
+}
+
+async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+
+    let resultDiv = document.getElementById("resultats");
+    let adviceDiv = document.getElementById("conseils");
+
+    if (!resultDiv.style.display || resultDiv.style.display === "none") {
+        alert("Veuillez d'abord effectuer un calcul.");
+        return;
+    }
+
+    const typeVehicule = document.getElementById("typeVehicule").value || "Non renseigné";
+    const conso = document.getElementById("conso").value || "-";
+    const prixCarburant = document.getElementById("prixCarburant").value || "-";
+    const pneus = document.getElementById("pneus").value || "-";
+    const freins = document.getElementById("freins").value || "-";
+    const entretien = document.getElementById("entretien").value || "-";
+    const amortissement = document.getElementById("amortissement").value || "-";
+
+    let captureZone = document.createElement("div");
+    captureZone.style.padding = "20px";
+    captureZone.style.background = "#ffffff";
+    captureZone.style.color = "#000000";
+    captureZone.style.width = "600px";
+    captureZone.innerHTML = `
+        <h2>EcoTrajet - Résultats</h2>
+        <div style="border:1px solid #ccc; padding:10px 15px; margin-bottom:20px; border-radius:8px;">
+            <h3>Informations véhicule</h3>
+            Type : ${typeVehicule}<br>
+            Consommation : ${conso} L/100 km<br>
+            Carburant : ${prixCarburant} €/L<br>
+            Pneus : ${pneus} €/km<br>
+            Freins : ${freins} €/km<br>
+            Entretien : ${entretien} €/km<br>
+            Amortissement : ${amortissement} €/km
+        </div>
+        ${resultDiv.innerHTML}
+        <br><br>
+        ${adviceDiv.innerHTML}
+    `;
+
+    document.body.appendChild(captureZone);
+
+    const canvas = await html2canvas(captureZone);
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const imgWidth = 190;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+    pdf.save("EcoTrajet.pdf");
+
+    captureZone.remove();
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
+
+
